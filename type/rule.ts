@@ -19,11 +19,6 @@ export interface RuleItemParsed extends Omit<RuleItem, 'rule'> {
 
 export type RulesParsed = Record<string, RuleItemParsed>
 
-export interface RuleParseRuleItemRuleParams {
-  condition: string,
-  ruleResult: RuleResult
-}
-
 export type RuleOperator =
   | 'equals'
   | 'greater'

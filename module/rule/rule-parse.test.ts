@@ -26,7 +26,7 @@ describe('Rule Module Parse Tests', () => {
   };
 
   test('Test that a single rule condition can be parsed.', () => {
-    const test = ruleParseRuleItemRule({ condition, ruleResult });
+    const test = ruleParseRuleItemRule(condition, ruleResult);
     const result = {
       conditions: [
         {
@@ -44,7 +44,7 @@ describe('Rule Module Parse Tests', () => {
   test('Test that a single rule condition can be parsed with two JPaths pointers.', () => {
     condition = 'if {$.user.age} greater/equals {$.user.something}';
 
-    const test = ruleParseRuleItemRule({ condition, ruleResult });
+    const test = ruleParseRuleItemRule(condition, ruleResult);
     const result = {
       conditions: [
         {
@@ -62,7 +62,7 @@ describe('Rule Module Parse Tests', () => {
   test('Test that a single rule with 2 conditions can be parsed.', () => {
     condition = 'if {$.user.age} greater/equals 30 and {$.user.age} less 40';
 
-    const test = ruleParseRuleItemRule({ condition, ruleResult });
+    const test = ruleParseRuleItemRule(condition, ruleResult);
     const result = {
       conditions: [
         {
@@ -86,7 +86,7 @@ describe('Rule Module Parse Tests', () => {
     condition =
       'if {$.user.age} greater/equals 30 and {$.user.age} less 40 and {$.user.name} equals Darth Vader';
 
-    const test = ruleParseRuleItemRule({ condition, ruleResult });
+    const test = ruleParseRuleItemRule(condition, ruleResult);
     const result = {
       conditions: [
         {

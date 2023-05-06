@@ -1,16 +1,19 @@
-export const isArray = (check: any): boolean => {
-  return isObject(check) && check instanceof Array
+export function isArray(input: any): boolean {
+  return isObject(input) && input instanceof Array;
+};
+
+export function isFunction(input: any): boolean {
+  return typeof input === 'function';
+};
+
+export function isNumber(input: any): boolean {
+  return !isString(input) && !Number.isNaN(parseFloat(input))
 }
 
-export const isFunction = (check: any): boolean => {
-  return typeof check === 'function'
-}
+export function isObject(input: any): boolean {
+  return typeof input === 'object' && input !== null;
+};
 
-export const isObject = (check: any): boolean => {
-  return typeof check === 'object'
-}
-
-export const isString = (check: any): boolean => {
-  return typeof check === 'string'
-}
-
+export function isString(input: any): boolean {
+  return typeof input === 'string';
+};

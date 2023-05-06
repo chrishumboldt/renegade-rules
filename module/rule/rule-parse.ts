@@ -1,81 +1,78 @@
-import { objectClone } from '@module/object'
+import { isNumber } from '@module/is';
+import { objectClone } from '@module/object';
 import type {
   RuleItem,
   RuleItemParsed,
   RuleOperator,
-  RuleParseRuleItemRuleParams,
   RuleParsed,
+  RuleResult,
   RuleValue,
   Rules,
   RulesParsed,
-} from '@type/rule'
+} from '@type/rule';
 
-export const ruleParse = (ruleMap: Rules): RulesParsed => {
-  const ruleReturn: RulesParsed = {}
+export function ruleParse(ruleMap: Rules): RulesParsed {
+  const ruleReturn: RulesParsed = {};
 
   for (const key in ruleMap) {
-    ruleReturn[key] = ruleParseRuleItem(ruleMap[key])
+    ruleReturn[key] = ruleParseRuleItem(ruleMap[key]);
   }
 
-  return ruleReturn
+  return ruleReturn;
 }
 
 // Parse the "against" property value on the rule condition.
-const ruleParseAgainst = (input: string): RuleValue => {
+function ruleParseAgainst(input: string): RuleValue {
   if (input === 'true') {
-    return true
+    return true;
   }
 
   if (input === 'false') {
-    return false
+    return false;
   }
 
-  const number = parseFloat(input)
-  if (!Number.isNaN(number)) {
-    return number
+  const number = parseFloat(input);
+  if (isNumber(number)) {
+    return number;
   }
 
-  return input
+  return input;
 }
 
-export const ruleParseRuleItem = (ruleItem: RuleItem): RuleItemParsed => {
-  const { rule, ...leftOvers } = ruleItem
-  const ruleItemReturn = objectClone(leftOvers)
+export function ruleParseRuleItem(ruleItem: RuleItem): RuleItemParsed {
+  const { rule, ...leftOvers } = ruleItem;
+  const ruleItemReturn = objectClone(leftOvers);
 
-  ruleItemReturn.rule = {}
+  ruleItemReturn.rule = {};
 
   for (const key in rule) {
-    ruleItemReturn.rule[key] = ruleParseRuleItemRule({
-      condition: key,
-      ruleResult: rule[key],
-    })
+    ruleItemReturn.rule[key] = ruleParseRuleItemRule(key, rule[key]);
   }
 
-  return ruleItemReturn
+  return ruleItemReturn;
 }
 
-export const ruleParseRuleItemRule = ({
-  condition,
-  ruleResult,
-}: RuleParseRuleItemRuleParams): RuleParsed => {
-  const ruleReturn: RuleParsed = objectClone(ruleResult)
+export function ruleParseRuleItemRule(
+  condition: string,
+  ruleResult: RuleResult,
+): RuleParsed {
+  const ruleReturn: RuleParsed = objectClone(ruleResult);
 
-  ruleReturn.conditions = []
+  ruleReturn.conditions = [];
 
   condition
     .substring(3)
     .split('and')
     .filter(item => item.length > 2)
     .forEach(condition => {
-      const [check, operator, ...against] = condition.trim().split(' ')
+      const [check, operator, ...against] = condition.trim().split(' ');
 
       ruleReturn.conditions!.push({
         against: ruleParseAgainst(against.join(' ')),
         check,
         operator: operator as RuleOperator,
-      })
-    })
+      });
+    });
 
-  return ruleReturn
+  return ruleReturn;
 }
-
