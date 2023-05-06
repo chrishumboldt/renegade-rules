@@ -12,6 +12,6 @@
     },
     "strict": true,
     "target": "ES2015",
-    "types": ["node"]
+    "types": ["jest", "node"]
   }
 }
