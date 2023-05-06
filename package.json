@@ -1,0 +1,29 @@
+{
+  "name": "@renegaderocks/rules",
+  "version": "0.0.1",
+  "description": "A simple rule engine using a human readable structure.",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "./node_modules/.bin/esbuild src/index.ts --bundle --outfile=dist/main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chrishumboldt/renegade-rules.git"
+  },
+  "keywords": [
+    "Rule",
+    "Engine",
+    "Renegade"
+  ],
+  "author": "Chris Humboldt",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chrishumboldt/renegade-rules/issues"
+  },
+  "homepage": "https://github.com/chrishumboldt/renegade-rules#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "esbuild": "^0.17.18"
+  }
+}
