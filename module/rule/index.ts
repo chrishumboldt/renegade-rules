@@ -1,1 +1,1 @@
-export * from './rule-run'
+export * from './rules'

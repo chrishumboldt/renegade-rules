@@ -1,49 +1,62 @@
 export type RuleResult = {
-  result: RuleValue
-} 
+  result: RuleValue;
+};
 
 export interface RuleCondition {
-  against: RuleValue
-  check: string
-  operator: RuleOperator
+  against: RuleValue;
+  check: string;
+  operator: RuleOperator;
+}
+
+export interface RuleConditionResult {
+  fulfilled: boolean;
+  result: RuleValue
 }
 
 export interface RuleItem {
-  default?: RuleValue
-  rule: Record<string, RuleResult>
+  default?: RuleValue;
+  hasRun?: boolean;
+  rules: Record<string, RuleResult>;
 }
 
 export interface RuleItemParsed extends Omit<RuleItem, 'rule'> {
-  rule: Record<string, RuleParsed>
+  dependencies: string[];
+  rules: Record<string, RuleParsed>;
 }
-
-export type RulesParsed = Record<string, RuleItemParsed>
 
 export type RuleOperator =
   | 'equals'
   | 'greater'
   | 'greater/equals'
   | 'less'
-  | 'less/equals'
+  | 'less/equals';
 
 export interface RuleParsed {
-  conditions?: RuleCondition[]
-  result: RuleValue
-}
-
-export interface RuleRunParams<T = Record<string, any>> {
-  debug?: boolean
-  rules: Rules
-  state: T
+  conditions?: RuleCondition[];
+  result: RuleValue;
 }
 
 export interface RuleRunPipe {
-  debug?: boolean
-  rulesParsed: RulesParsed
-  stateFlat: Record<string, any>
+  rulesParsed: RulesParsed;
+  stateFlat: Record<string, any>;
 }
 
-export type Rules = Record<string, RuleItem>
+export type Rules = Record<string, RuleItem>;
 
-export type RuleValue = boolean | number | string
+export type RulesParsed = Record<string, RuleItemParsed>;
 
+export interface RulesAndStateParser {
+  rules: Rules;
+  state: RulesState;
+}
+
+export interface RulesAndStateParsed {
+  rules: RulesParsed;
+  state: RulesStateParsed;
+}
+
+export type RulesState = Record<string, any>;
+
+export type RulesStateParsed = Record<string, RuleValue>;
+
+export type RuleValue = boolean | number | string;
