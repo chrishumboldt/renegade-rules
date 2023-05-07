@@ -159,7 +159,7 @@ function getConditionFulfillment(
 }
 
 function getConditionValue(input: any, state: RulesStateParsed): RuleValue {
-  if (isString(input) && (input as string).startsWith('{$.')) {
+  if (isString(input) && input.startsWith('{$.')) {
     return state[input];
   }
 

@@ -22,7 +22,7 @@ export function rulesParse(rules: Rules): RulesParsed {
 }
 
 function isStateVariable(input: any): boolean {
-  return isString(input) && (input as string).startsWith('{$.');
+  return isString(input) && input.startsWith('{$.');
 }
 
 // Parse the "against" property value on the rule condition.
@@ -101,9 +101,9 @@ export function rulesParseRuleItemRule(
       }
       if (
         isStateVariable(againstResult) &&
-        !stateVariables.includes(againstResult as string)
+        !stateVariables.includes(againstResult)
       ) {
-        stateVariables.push(againstResult as string);
+        stateVariables.push(againstResult);
       }
     });
 
