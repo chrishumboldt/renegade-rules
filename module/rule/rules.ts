@@ -154,9 +154,7 @@ function getConditionFulfillment(
   for (let index = 0; index < conditions.length; index++) {
     const conditionResult = checkCondition(conditions[index], state);
 
-    if (conditionResult === false) {
-      return false;
-    }
+    if (conditionResult === false) return false;
   }
 
   return true;
@@ -174,10 +172,8 @@ function getRuleResult(
   ruleItem: RuleParsed,
   state: RulesStateParsed,
 ): RuleConditionResult {
-  let fulfilled = getConditionFulfillment(ruleItem.conditions, state);
-
   return {
-    fulfilled,
+    fulfilled: getConditionFulfillment(ruleItem.conditions, state),
     result: ruleItem.result,
   };
 }

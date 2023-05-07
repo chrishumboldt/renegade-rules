@@ -110,7 +110,7 @@ describe('Rule Module Run Tests', () => {
     });
 
     expect(
-      testRules.run({ gameDuration: 40, personalFoulCount: 6 }).result
+      testRules.run({ gameDuration: 40, personalFoulCount: 5 }).result
         .fouledOut,
     ).toBe(true);
 
