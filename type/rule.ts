@@ -46,11 +46,15 @@ export interface RuleItemParsed extends Omit<RuleItem, 'rule'> {
 }
 
 export type RuleOperator =
+  | 'endsWith'
   | 'equals'
+  | 'excludes'
   | 'greater'
   | 'greater/equals'
+  | 'includes'
   | 'less'
-  | 'less/equals';
+  | 'less/equals'
+  | 'startsWith';
 
 export interface RuleParsed {
   conditions?: RuleCondition[];
@@ -85,4 +89,4 @@ export type RulesState = Record<string, any>;
 
 export type RulesStateParsed = Record<string, RuleValue>;
 
-export type RuleValue = boolean | number | string;
+export type RuleValue = any

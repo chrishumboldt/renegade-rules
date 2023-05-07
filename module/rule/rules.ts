@@ -27,26 +27,27 @@ function checkCondition(
   const checkValue = getConditionValue(check, state);
 
   switch (operator) {
+    case 'endsWith':
+      return isString(checkValue) && checkValue.endsWith(againstValue);
     case 'equals':
-      if (checkValue === againstValue) return true;
-      break;
+      return checkValue === againstValue;
+    case 'excludes':
+      return !checkValue.includes(againstValue);
     case 'greater':
-      if (checkValue > againstValue) return true;
-      break;
+      return checkValue > againstValue;
     case 'greater/equals':
-      if (checkValue >= againstValue) return true;
-      break;
+      return checkValue >= againstValue;
+    case 'includes':
+      return checkValue.includes(againstValue);
     case 'less':
-      if (checkValue < againstValue) return true;
-      break;
+      return checkValue < againstValue;
     case 'less/equals':
-      if (checkValue <= againstValue) return true;
-      break;
+      return checkValue <= againstValue;
+    case 'startsWith':
+      return isString(checkValue) && checkValue.startsWith(againstValue);
     default:
       return false;
   }
-
-  return false;
 }
 
 function checkForDependencyLoop({

@@ -11,14 +11,14 @@ import type {
   RulesParsed,
 } from '@type/rule';
 
-export function rulesParse(ruleMap: Rules): RulesParsed {
-  const ruleReturn: RulesParsed = {};
+export function rulesParse(rules: Rules): RulesParsed {
+  const rulesReturn: RulesParsed = {};
 
-  for (const key in ruleMap) {
-    ruleReturn[key] = rulesParseRuleItem(ruleMap[key], Object.keys(ruleMap));
+  for (const key in rules) {
+    rulesReturn[key] = rulesParseRuleItem(rules[key], Object.keys(rules));
   }
 
-  return ruleReturn;
+  return rulesReturn;
 }
 
 function isStateVariable(input: any): boolean {
@@ -86,7 +86,6 @@ export function rulesParseRuleItemRule(
   condition
     .substring(3)
     .split('and')
-    .filter(item => item.length > 2)
     .forEach(condition => {
       const [check, operator, ...against] = condition.trim().split(' ');
       const againstResult = parseAgainst(against.join(' '));
