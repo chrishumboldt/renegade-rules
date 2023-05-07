@@ -1,20 +1,23 @@
+import { isString } from '@module/is';
 import { logOut } from '@module/log';
+import { objectCreateFromPath, objectFlatten } from '@module/object';
 import { pipe } from '@module/pipe';
 import {
+  CheckForDependencyLoopInput,
+  CheckForDependencyLoopOutput,
+  ExecuteRuleInput,
+  RuleCondition,
+  RuleConditionResult,
+  RuleParsed,
+  RuleValue,
   Rules,
   RulesAndStateParsed,
   RulesAndStateParser,
+  RulesOutput,
   RulesState,
   RulesStateParsed,
-  RulesParsed,
-  RuleValue,
-  RuleParsed,
-  RuleConditionResult,
-  RuleCondition,
 } from '@type/rule';
 import { rulesParse } from './rules-parse';
-import { objectCreateFromPath, objectFlatten } from '@module/object';
-import { isString } from '@module/is';
 
 function checkCondition(
   { against, check, operator }: RuleCondition,
@@ -46,27 +49,74 @@ function checkCondition(
   return false;
 }
 
+function checkForDependencyLoop({
+  dependencies,
+  history,
+  ruleString,
+}: CheckForDependencyLoopInput): CheckForDependencyLoopOutput {
+  for (let index = 0; index < dependencies.length; index++) {
+    if (history[dependencies[index]]) {
+      return {
+        hasError: true,
+        error: `There is a circular dependency with "${ruleString}" and dependency "${dependencies[index]}".`,
+      };
+    }
+  }
+
+  return {
+    hasError: false,
+  };
+}
+
 function executeEachRule({
   rules,
   state,
-}: RulesAndStateParsed): RulesStateParsed {
+}: RulesAndStateParsed): RulesOutput {
+  const errors: string[] = [];
+
   for (const key in rules) {
     // We can simply skip over rules that have already run.
     if (rules[key].hasRun === true) continue;
 
-    executeRule(rules, key, state);
+    executeRule({ errors, key, rules, state });
+    if (errors.length > 0) break;
   }
 
-  logOut('Log it', false)({ rules, state })
+  if (errors.length > 0) {
+    return { errors, result: state };
+  }
 
-  return state;
+  return { result: state };
 }
 
-function executeRule(rules: RulesParsed, key: string, state: RulesStateParsed) {
+function executeRule({
+  dependencyHistory = {},
+  errors,
+  key,
+  rules,
+  state,
+}: ExecuteRuleInput) {
   // Check the dependencies first.
   if (rules[key].dependencies && rules[key].dependencies.length > 0) {
+    const { error, hasError } = checkForDependencyLoop({
+      dependencies: rules[key].dependencies,
+      history: dependencyHistory,
+      ruleString: key,
+    });
+
+    if (hasError) {
+      errors.push(error!);
+      return;
+    }
+
     for (let index = 0; index < rules[key].dependencies.length; index++) {
-      executeRule(rules, rules[key].dependencies[index], state);
+      executeRule({
+        dependencyHistory,
+        errors,
+        key: rules[key].dependencies[index],
+        rules,
+        state,
+      });
     }
   }
 
@@ -95,7 +145,7 @@ function getConditionFulfillment(
   conditions: RuleCondition[] = [],
   state: RulesStateParsed,
 ): boolean {
-  if (conditions.length < 1) return false
+  if (conditions.length < 1) return false;
 
   let result = false;
 
@@ -149,23 +199,30 @@ function rulesAndStateParser({
 }
 
 function rulesRun(rules: Rules) {
-  return function (state: RulesState) {
+  return function (state: RulesState): RulesOutput {
     return pipe(
       rulesAndStateParser,
       executeEachRule,
       sanitiseKeys,
-      objectCreateFromPath,
+      transformFlatResults,
       logOut('Rules Result', false),
     )({ rules, state });
   };
 }
 
-function sanitiseKeys(state: RulesStateParsed): Record<string, any> {
-  const newObject: Record<string, any> = {}
+function sanitiseKeys(input: RulesOutput): RulesOutput {
+  for (const key in input.result) {
+    if (!key.startsWith('{$.')) continue;
 
-  for (const key in state) {
-    newObject[key.substring(3, key.length - 1)] = state[key]
+    input.result[key.substring(3, key.length - 1)] = input.result[key];
+    delete input.result[key]
   }
 
-  return newObject
+  return input;
+}
+
+function transformFlatResults(input: RulesOutput): RulesOutput {
+  input.result = objectCreateFromPath(input.result)
+
+  return input
 }

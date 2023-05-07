@@ -24,10 +24,10 @@ describe('Rule Module Run Tests', () => {
     isOlder: true,
   };
 
-  test('That a simple will resolve properly', () => {
+  test('That a simple rule will resolve properly', () => {
     const rulesTest = rules(testRules);
 
-    expect(rulesTest.run(testState)).toStrictEqual({
+    expect(rulesTest.run(testState).result).toStrictEqual({
       age: 35,
       isOlder: true,
       lightsaberColour: 'red',

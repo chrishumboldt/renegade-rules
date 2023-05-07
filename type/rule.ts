@@ -1,3 +1,24 @@
+export interface CheckForDependencyLoopInput {
+  dependencies: string[];
+  history: DependencyHistory;
+  ruleString: string;
+}
+
+export interface CheckForDependencyLoopOutput {
+  error?: string;
+  hasError: boolean;
+}
+
+type DependencyHistory = Record<string, boolean>
+
+export interface ExecuteRuleInput {
+  dependencyHistory?: DependencyHistory;
+  errors: string[];
+  key: string;
+  rules: RulesParsed;
+  state: RulesStateParsed;
+}
+
 export type RuleResult = {
   result: RuleValue;
 };
@@ -10,7 +31,7 @@ export interface RuleCondition {
 
 export interface RuleConditionResult {
   fulfilled: boolean;
-  result: RuleValue
+  result: RuleValue;
 }
 
 export interface RuleItem {
@@ -44,6 +65,11 @@ export interface RuleRunPipe {
 export type Rules = Record<string, RuleItem>;
 
 export type RulesParsed = Record<string, RuleItemParsed>;
+
+export interface RulesOutput<T = unknown> {
+  errors?: string[];
+  result: Record<string, T>;
+}
 
 export interface RulesAndStateParser {
   rules: Rules;
