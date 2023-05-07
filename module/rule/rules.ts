@@ -152,9 +152,7 @@ function getConditionFulfillment(
   if (conditions.length < 1) return false;
 
   for (let index = 0; index < conditions.length; index++) {
-    const conditionResult = checkCondition(conditions[index], state);
-
-    if (conditionResult === false) return false;
+    if (checkCondition(conditions[index], state) === false) return false;
   }
 
   return true;
