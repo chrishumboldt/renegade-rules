@@ -58,7 +58,11 @@ function checkForDependencyLoop({
     if (history[dependencies[index]]) {
       return {
         hasError: true,
-        error: `There is a circular dependency with "${ruleString}" and dependency "${dependencies[index]}".`,
+        errors: [
+          `There is a circular dependency with ${ruleString}->${Object.keys(
+            history,
+          ).join('->')}->${ruleString}.`,
+        ],
       };
     }
   }
@@ -68,10 +72,7 @@ function checkForDependencyLoop({
   };
 }
 
-function executeEachRule({
-  rules,
-  state,
-}: RulesAndStateParsed): RulesOutput {
+function executeEachRule({ rules, state }: RulesAndStateParsed): RulesOutput {
   const errors: string[] = [];
 
   for (const key in rules) {
@@ -96,18 +97,22 @@ function executeRule({
   rules,
   state,
 }: ExecuteRuleInput) {
+  if (!key.startsWith('{$.') || rules[key].hasRun === true) return;
+
   // Check the dependencies first.
   if (rules[key].dependencies && rules[key].dependencies.length > 0) {
-    const { error, hasError } = checkForDependencyLoop({
+    const check = checkForDependencyLoop({
       dependencies: rules[key].dependencies,
       history: dependencyHistory,
       ruleString: key,
     });
 
-    if (hasError) {
-      errors.push(error!);
+    if (check.hasError) {
+      check.errors?.forEach(item => errors.push(item));
       return;
     }
+
+    dependencyHistory[key] = true;
 
     for (let index = 0; index < rules[key].dependencies.length; index++) {
       executeRule({
@@ -119,8 +124,6 @@ function executeRule({
       });
     }
   }
-
-  if (rules[key].hasRun === true) return state;
 
   if (rules[key].default !== undefined) {
     state[key] = rules[key].default!;
@@ -147,18 +150,15 @@ function getConditionFulfillment(
 ): boolean {
   if (conditions.length < 1) return false;
 
-  let result = false;
-
   for (let index = 0; index < conditions.length; index++) {
     const conditionResult = checkCondition(conditions[index], state);
 
-    if (conditionResult === true) {
-      result = true;
-      break;
+    if (conditionResult === false) {
+      return false;
     }
   }
 
-  return result;
+  return true;
 }
 
 function getConditionValue(input: any, state: RulesStateParsed): RuleValue {
@@ -181,6 +181,16 @@ function getRuleResult(
   };
 }
 
+function logOutResult(debug: boolean) {
+  return function (input: RulesOutput): RulesOutput {
+    if (debug === true) {
+      logOut('Rules Debug: Result', false)(input);
+    }
+
+    return input;
+  };
+}
+
 export function rules(rules: Rules) {
   return {
     parse: () => rulesParse(rules),
@@ -199,13 +209,13 @@ function rulesAndStateParser({
 }
 
 function rulesRun(rules: Rules) {
-  return function (state: RulesState): RulesOutput {
+  return function (state: RulesState, debug = false): RulesOutput {
     return pipe(
       rulesAndStateParser,
       executeEachRule,
       sanitiseKeys,
       transformFlatResults,
-      logOut('Rules Result', false),
+      logOutResult(debug),
     )({ rules, state });
   };
 }
@@ -215,14 +225,14 @@ function sanitiseKeys(input: RulesOutput): RulesOutput {
     if (!key.startsWith('{$.')) continue;
 
     input.result[key.substring(3, key.length - 1)] = input.result[key];
-    delete input.result[key]
+    delete input.result[key];
   }
 
   return input;
 }
 
 function transformFlatResults(input: RulesOutput): RulesOutput {
-  input.result = objectCreateFromPath(input.result)
+  input.result = objectCreateFromPath(input.result);
 
-  return input
+  return input;
 }

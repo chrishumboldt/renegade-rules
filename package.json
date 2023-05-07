@@ -5,7 +5,7 @@
   "main": "dist/main.js",
   "scripts": {
     "build": "./node_modules/.bin/esbuild ./index.ts --bundle --platform=node --outfile=./dist/main.js",
-    "test": "jest"
+    "test": "jest --verbose"
   },
   "repository": {
     "type": "git",

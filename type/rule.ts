@@ -5,7 +5,7 @@ export interface CheckForDependencyLoopInput {
 }
 
 export interface CheckForDependencyLoopOutput {
-  error?: string;
+  errors?: string[];
   hasError: boolean;
 }
 
