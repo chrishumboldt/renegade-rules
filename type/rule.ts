@@ -79,11 +79,6 @@ export interface RulesOutput<T = unknown> {
   rulesRun: string[]
 }
 
-export interface RulesAndStateParser {
-  rules: RulesParsed;
-  state: RulesState;
-}
-
 export interface RulesAndStateParsed {
   rules: RulesParsed;
   state: RulesStateParsed;
@@ -94,3 +89,9 @@ export type RulesState = Record<string, any>;
 export type RulesStateParsed = Record<string, RuleValue>;
 
 export type RuleValue = any
+
+export interface StateParser {
+  rules: RulesParsed;
+  state: RulesState;
+}
+

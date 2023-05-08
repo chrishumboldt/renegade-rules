@@ -1,8 +1,8 @@
-import { Rules } from '@type/rule';
+import { RuleCondition, Rules } from '@type/rule';
 import { checkCondition, rules } from './rules';
 
 describe('Rule Module Run Tests', () => {
-  test('Test that the rules conditions resolve properly.', () => {
+  test('Test that the equals rule condition resolves properly.', () => {
     expect(
       checkCondition(
         {
@@ -13,6 +13,60 @@ describe('Rule Module Run Tests', () => {
         {},
       ),
     ).toBe(true);
+
+    expect(
+      checkCondition(
+        {
+          against: 'Darth Vader',
+          check: '{$.name}',
+          operator: 'equals',
+        },
+        {
+          '{$.name}': 'Darth Vader',
+        },
+      ),
+    ).toBe(true);
+
+    const fullCondition: RuleCondition = {
+      against: '{$.sithName}',
+      check: '{$.name}',
+      operator: 'equals',
+    };
+
+    expect(
+      checkCondition(fullCondition, {
+        '{$.name}': 'Darth Vader',
+        '{$.sithName}': 'Darth Vader',
+      }),
+    ).toBe(true);
+
+    expect(
+      checkCondition(fullCondition, {
+        '{$.name}': 'Anakin Skywalker',
+        '{$.sithName}': 'Darth Vader',
+      }),
+    ).toBe(false);
+
+    expect(
+      checkCondition(fullCondition, {
+        '{$.name}': true,
+        '{$.sithName}': 'Darth Vader',
+      }),
+    ).toBe(false);
+
+    expect(
+      checkCondition(fullCondition, {
+        '{$.name}': 'Darth Vader',
+        '{$.sithName}': true,
+      }),
+    ).toBe(false);
+
+    expect(
+      checkCondition(fullCondition, {
+        '{$.name}': 2,
+        '{$.sithName}': 'Darth Vader',
+      }),
+    ).toBe(false);
   });
 
   test('Test that a simple rule will resolve properly.', () => {

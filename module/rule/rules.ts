@@ -13,11 +13,11 @@ import {
   RuleValue,
   Rules,
   RulesAndStateParsed,
-  RulesAndStateParser,
   RulesOutput,
   RulesParsed,
   RulesState,
   RulesStateParsed,
+  StateParser,
 } from '@type/rule';
 import { rulesParse } from './rules-parse';
 
@@ -77,7 +77,7 @@ function checkForDependencyLoop({
 
 function executeAllRules({ rules, state }: RulesAndStateParsed): RulesOutput {
   const errors: string[] = [];
-  const hasRun: RuleHasRun = {}
+  const hasRun: RuleHasRun = {};
 
   for (const key in rules) {
     // We can simply skip over rules that have already run.
@@ -91,7 +91,7 @@ function executeAllRules({ rules, state }: RulesAndStateParsed): RulesOutput {
     return { errors, result: state, rulesRun: Object.keys(hasRun) };
   }
 
-  return { result: state, rulesRun: Object.keys(hasRun)  };
+  return { result: state, rulesRun: Object.keys(hasRun) };
 }
 
 function executeRule({
@@ -200,24 +200,14 @@ export function rules(rules: Rules) {
   };
 }
 
-function rulesAndStateParser({
-  rules,
-  state,
-}: RulesAndStateParser): RulesAndStateParsed {
-  return {
-    rules,
-    state: objectFlatten(state),
-  };
-}
-
 function rulesRun(rules: RulesParsed) {
   return function (state: RulesState, debug = false): RulesOutput {
     if (debug === true) {
-      logOut('Rules Debug: Parsed Rules', false)(rules)
+      logOut('Rules Debug: Parsed Rules', false)(rules);
     }
 
     return pipe(
-      rulesAndStateParser,
+      stateParser,
       executeAllRules,
       sanitiseKeys,
       transformFlatResults,
@@ -233,6 +223,12 @@ function sanitiseKeys(input: RulesOutput): RulesOutput {
     input.result[key.substring(3, key.length - 1)] = input.result[key];
     delete input.result[key];
   }
+
+  return input;
+}
+
+function stateParser(input: StateParser): RulesAndStateParsed {
+  input.state = objectFlatten(input.state);
 
   return input;
 }
