@@ -1,8 +1,21 @@
 import { Rules } from '@type/rule';
-import { rules } from './rules';
+import { checkCondition, rules } from './rules';
 
 describe('Rule Module Run Tests', () => {
-  test('Test that a simple rule will resolve properly', () => {
+  test('Test that the rules conditions resolve properly.', () => {
+    expect(
+      checkCondition(
+        {
+          against: 'Darth Vader',
+          check: 'Darth Vader',
+          operator: 'equals',
+        },
+        {},
+      ),
+    ).toBe(true);
+  });
+
+  test('Test that a simple rule will resolve properly.', () => {
     let testRules: Rules = {
       '{$.lightsaberColour}': {
         default: 'blue',
@@ -51,12 +64,9 @@ describe('Rule Module Run Tests', () => {
       },
     };
 
-    expect(rules(testRules).run({})).toStrictEqual({
-      errors: [
-        'There is a circular dependency with {$.name}->{$.age}->{$.name}.',
-      ],
-      result: {},
-    });
+    expect(rules(testRules).run({}).errors).toStrictEqual([
+      'There is a circular dependency with {$.name}->{$.age}->{$.name}.',
+    ]);
   });
 
   test('Test that we can catch a 3 tier dependency loop.', () => {
@@ -84,12 +94,9 @@ describe('Rule Module Run Tests', () => {
       },
     };
 
-    expect(rules(testRules).run({})).toStrictEqual({
-      errors: [
-        'There is a circular dependency with {$.isOlder}->{$.age}->{$.name}->{$.isOlder}.',
-      ],
-      result: {},
-    });
+    expect(rules(testRules).run({}, false).errors).toStrictEqual([
+      'There is a circular dependency with {$.isOlder}->{$.age}->{$.name}->{$.isOlder}.',
+    ]);
   });
 
   test('Test a rule set from another library.', () => {
@@ -115,7 +122,7 @@ describe('Rule Module Run Tests', () => {
     ).toBe(true);
 
     expect(
-      testRules.run({ gameDuration: 48, personalFoulCount: 6 }).result
+      testRules.run({ gameDuration: 48, personalFoulCount: 6 }, false).result
         .fouledOut,
     ).toBe(true);
 

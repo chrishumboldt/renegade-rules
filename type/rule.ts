@@ -14,10 +14,13 @@ type DependencyHistory = Record<string, boolean>
 export interface ExecuteRuleInput {
   dependencyHistory?: DependencyHistory;
   errors: string[];
+  hasRun: RuleHasRun;
   key: string;
   rules: RulesParsed;
   state: RulesStateParsed;
 }
+
+export type RuleHasRun = Record<string, boolean>
 
 export type RuleResult = {
   result: RuleValue;
@@ -73,10 +76,11 @@ export type RulesParsed = Record<string, RuleItemParsed>;
 export interface RulesOutput<T = unknown> {
   errors?: string[];
   result: Record<string, T>;
+  rulesRun: string[]
 }
 
 export interface RulesAndStateParser {
-  rules: Rules;
+  rules: RulesParsed;
   state: RulesState;
 }
 

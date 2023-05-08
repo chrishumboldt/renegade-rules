@@ -8,18 +8,20 @@ import {
   ExecuteRuleInput,
   RuleCondition,
   RuleConditionResult,
+  RuleHasRun,
   RuleParsed,
   RuleValue,
   Rules,
   RulesAndStateParsed,
   RulesAndStateParser,
   RulesOutput,
+  RulesParsed,
   RulesState,
   RulesStateParsed,
 } from '@type/rule';
 import { rulesParse } from './rules-parse';
 
-function checkCondition(
+export function checkCondition(
   { against, check, operator }: RuleCondition,
   state: RulesStateParsed,
 ): boolean {
@@ -73,32 +75,34 @@ function checkForDependencyLoop({
   };
 }
 
-function executeEachRule({ rules, state }: RulesAndStateParsed): RulesOutput {
+function executeAllRules({ rules, state }: RulesAndStateParsed): RulesOutput {
   const errors: string[] = [];
+  const hasRun: RuleHasRun = {}
 
   for (const key in rules) {
     // We can simply skip over rules that have already run.
     if (rules[key].hasRun === true) continue;
 
-    executeRule({ errors, key, rules, state });
+    executeRule({ errors, hasRun, key, rules, state });
     if (errors.length > 0) break;
   }
 
   if (errors.length > 0) {
-    return { errors, result: state };
+    return { errors, result: state, rulesRun: Object.keys(hasRun) };
   }
 
-  return { result: state };
+  return { result: state, rulesRun: Object.keys(hasRun)  };
 }
 
 function executeRule({
   dependencyHistory = {},
   errors,
+  hasRun,
   key,
   rules,
   state,
 }: ExecuteRuleInput) {
-  if (!key.startsWith('{$.') || rules[key].hasRun === true) return;
+  if (!key.startsWith('{$.') || hasRun[key] === true) return;
 
   // Check the dependencies first.
   if (rules[key].dependencies && rules[key].dependencies.length > 0) {
@@ -119,6 +123,7 @@ function executeRule({
       executeRule({
         dependencyHistory,
         errors,
+        hasRun,
         key: rules[key].dependencies[index],
         rules,
         state,
@@ -142,7 +147,7 @@ function executeRule({
     }
   }
 
-  rules[key].hasRun = true;
+  hasRun[key] = true;
 }
 
 function getConditionFulfillment(
@@ -187,9 +192,11 @@ function logOutResult(debug: boolean) {
 }
 
 export function rules(rules: Rules) {
+  const rulesParsed = rulesParse(rules);
+
   return {
-    parse: () => rulesParse(rules),
-    run: rulesRun(rules),
+    parse: rulesParsed,
+    run: rulesRun(rulesParsed),
   };
 }
 
@@ -198,16 +205,20 @@ function rulesAndStateParser({
   state,
 }: RulesAndStateParser): RulesAndStateParsed {
   return {
-    rules: rulesParse(rules),
+    rules,
     state: objectFlatten(state),
   };
 }
 
-function rulesRun(rules: Rules) {
+function rulesRun(rules: RulesParsed) {
   return function (state: RulesState, debug = false): RulesOutput {
+    if (debug === true) {
+      logOut('Rules Debug: Parsed Rules', false)(rules)
+    }
+
     return pipe(
       rulesAndStateParser,
-      executeEachRule,
+      executeAllRules,
       sanitiseKeys,
       transformFlatResults,
       logOutResult(debug),
