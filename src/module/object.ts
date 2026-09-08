@@ -1,39 +1,35 @@
-import { isArray, isObject } from '@module/is';
+import { isArray, isPlainObject, isUnsafeKey } from './is'
 
-export function objectClone(source: any): any {
+export function objectClone<T>(source: T): T {
   if (isArray(source)) {
-    return objectCloneArray(source);
-  } else if (isObject(source)) {
-    return objectCloneObject(source);
+    return objectCloneArray(source as any[]) as T
+  } else if (isPlainObject(source)) {
+    return objectCloneObject(source as Record<string, any>) as T
   } else {
-    return source;
+    return source
   }
 }
 
 function objectCloneArray(source: any[]): any[] {
-  const returnItem: any[] = [];
+  const returnItem: any[] = []
 
   for (let item of source) {
-    returnItem.push(objectClone(item));
+    returnItem.push(objectClone(item))
   }
 
-  return returnItem;
+  return returnItem
 }
 
 function objectCloneObject(source: Record<string, any>): Record<string, any> {
-  const newObject: Record<string, any> = {};
+  const newObject: Record<string, any> = {}
 
   for (let key in source) {
-    if (source[key] == null) continue;
+    if (source[key] === undefined || isUnsafeKey(key)) continue
 
-    if (isObject(source[key])) {
-      newObject[key] = objectClone(source[key]);
-    } else {
-      newObject[key] = source[key];
-    }
+    newObject[key] = objectClone(source[key])
   }
 
-  return newObject;
+  return newObject
 }
 
 // This function will take in a map of "flat" paths that point to a
@@ -46,6 +42,10 @@ export function objectCreateFromPath(
 
   for (let key in input) {
     const keySplit = key.split('.').filter(item => item !== '$')
+
+    // Never let an untrusted path reach into the prototype chain.
+    if (keySplit.some(isUnsafeKey)) continue
+
     let ref: Record<string, any> = newObject
 
     keySplit.forEach((property, index) => {
@@ -54,8 +54,10 @@ export function objectCreateFromPath(
         // actual value.
         ref[property] = input[key]
       } else {
-        // If the object key does not exist then create it.
-        if (!ref[property]) {
+        // Only descend into an existing plain object, otherwise start a
+        // fresh one. A falsy leaf such as 0 or false is replaced rather
+        // than treated as "already there".
+        if (!isPlainObject(ref[property])) {
           ref[property] = {}
         }
         // Pass the reference to the nesting so we can continue to generate.
@@ -67,7 +69,6 @@ export function objectCreateFromPath(
   return newObject
 }
 
-
 export function objectFlatten<T = unknown>(
   input: Record<string, any>,
   parentKey?: string,
@@ -75,13 +76,14 @@ export function objectFlatten<T = unknown>(
   let result: Record<string, T> = {}
 
   for (const key in input) {
+    if (isUnsafeKey(key)) continue
+
     const innerParentKey = parentKey ? `${parentKey}.${key}` : key
 
-    if (isObject(input[key])) {
-      const innerResult = objectFlatten(
-        input[key],
-        innerParentKey,
-      )
+    // Only walk plain objects. Arrays and built ins stay whole as leaf
+    // values so they survive a flatten/rebuild round trip.
+    if (isPlainObject(input[key])) {
+      const innerResult = objectFlatten(input[key], innerParentKey)
 
       result = objectMerge(result, innerResult)
     } else {
@@ -97,7 +99,7 @@ export function objectMerge<T = Record<string, any>>(
   target: Record<string, any>,
 ): T {
   for (let key in target) {
-    if (target[key] == null) continue
+    if (target[key] === undefined || isUnsafeKey(key)) continue
 
     source[key] = objectReplaceValue(source[key], target[key])
   }
@@ -114,12 +116,10 @@ function objectReplaceValue(value: any, nextValue: any) {
     return value
   }
 
-  // Merge deeper objects.
-  if (isObject(value) && isObject(nextValue)) {
+  // Merge deeper plain objects.
+  if (isPlainObject(value) && isPlainObject(nextValue)) {
     return objectMerge(value, nextValue)
   }
 
   return nextValue
 }
-
-

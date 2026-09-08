@@ -1,17 +1,16 @@
 {
   "compilerOptions": {
+    "declaration": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
-    "module": "CommonJS",
-    "outDir": "dist",
-    "paths": {
-      "@data/*": ["./data/*"],
-      "@module/*": ["./module/*"],
-      "@type/*": ["./type/*"]
-    },
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "skipLibCheck": true,
     "strict": true,
-    "target": "ES2015",
-    "types": ["jest", "node"]
-  }
+    "target": "es2022"
+  },
+  "include": ["src"]
 }
