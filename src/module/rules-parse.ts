@@ -1,5 +1,5 @@
-import { isString } from '@module/is';
-import { objectClone } from '@module/object';
+import { isString } from './is';
+import { objectClone } from './object';
 import type {
   RuleItem,
   RuleItemParsed,
@@ -9,7 +9,7 @@ import type {
   RuleValue,
   Rules,
   RulesParsed,
-} from '@type/rule';
+} from '../type/rule';
 
 export function rulesParse(rules: Rules): RulesParsed {
   const rulesReturn: RulesParsed = {};
@@ -25,6 +25,18 @@ function isStateVariable(input: any): boolean {
   return isString(input) && input.startsWith('{$.');
 }
 
+const KNOWN_OPERATORS: RuleOperator[] = [
+  'endsWith',
+  'equals',
+  'excludes',
+  'greater',
+  'greater/equals',
+  'includes',
+  'less',
+  'less/equals',
+  'startsWith',
+];
+
 // Parse the "against" property value on the rule condition.
 function parseAgainst(input: string): RuleValue {
   if (input === 'true') {
@@ -35,9 +47,11 @@ function parseAgainst(input: string): RuleValue {
     return false;
   }
 
-  const number = Number(input);
-  if (input.trim() !== '' && !Number.isNaN(number)) {
-    return number;
+  // Only coerce values that read as an ordinary decimal literal. Tokens
+  // such as "007", "1e3" or "0x10" stay strings so identifiers and codes
+  // are not silently turned into numbers.
+  if (/^-?(0|[1-9]\d*)(\.\d+)?$/.test(input)) {
+    return Number(input);
   }
 
   return input;
@@ -48,10 +62,11 @@ export function rulesParseRuleItem(
   rootRulesKeys: string[] = [],
 ): RuleItemParsed {
   const { rules, ...leftOvers } = ruleItem;
-  const ruleItemReturn = objectClone(leftOvers);
+  const ruleItemReturn: RuleItemParsed = {
+    ...objectClone(leftOvers),
+    rules: {},
+  };
   const stateVariables: string[] = []
-
-  ruleItemReturn.rules = {};
 
   for (const key in rules) {
     ruleItemReturn.rules[key] = rulesParseRuleItemRule(
@@ -79,6 +94,12 @@ export function rulesParseRuleItemRule(
   ruleResult: RuleResult,
   stateVariables: string[] = [],
 ): RuleParsed {
+  if (!condition.startsWith('if ')) {
+    throw new Error(
+      `A rule condition must start with "if ". Received: "${condition}".`,
+    );
+  }
+
   const ruleReturn: RuleParsed = objectClone(ruleResult);
 
   ruleReturn.conditions = [];
@@ -86,8 +107,16 @@ export function rulesParseRuleItemRule(
   condition
     .substring(3)
     .split(' and ')
-    .forEach(condition => {
-      const [check, operator, ...against] = condition.trim().split(' ');
+    .forEach(part => {
+      const [check, operator, ...against] = part.trim().split(' ');
+
+      if (!KNOWN_OPERATORS.includes(operator as RuleOperator)) {
+        throw new Error(
+          `Unknown rule operator "${operator}" in condition "${condition}". ` +
+            `Expected one of: ${KNOWN_OPERATORS.join(', ')}.`,
+        );
+      }
+
       const againstResult = parseAgainst(against.join(' '));
 
       ruleReturn.conditions!.push({

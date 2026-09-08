@@ -1,4 +1,4 @@
-import { ColourLogItem, ColourLogName } from "@type/colour";
+import { ColourLogItem, ColourLogName } from '../type/colour';
 
 export const ColourLog = new Map<ColourLogName, ColourLogItem>()
   .set('black', {

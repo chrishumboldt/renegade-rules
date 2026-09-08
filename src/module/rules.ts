@@ -1,7 +1,7 @@
-import { isString } from '@module/is';
-import { logOut } from '@module/log';
-import { objectCreateFromPath, objectFlatten } from '@module/object';
-import { pipe } from '@module/pipe';
+import { isArray, isPlainObject, isString } from './is';
+import { logOut } from './log';
+import { objectCreateFromPath, objectFlatten } from './object';
+import { pipe } from './pipe';
 import {
   CheckForDependencyLoopInput,
   CheckForDependencyLoopOutput,
@@ -18,7 +18,7 @@ import {
   RulesState,
   RulesStateParsed,
   StateParser,
-} from '@type/rule';
+} from '../type/rule';
 import { rulesParse } from './rules-parse';
 
 export function checkCondition(
@@ -34,13 +34,15 @@ export function checkCondition(
     case 'equals':
       return checkValue === againstValue;
     case 'excludes':
-      return !checkValue.includes(againstValue);
+      // The strict negation of "includes": a value that cannot contain
+      // anything excludes everything.
+      return !(canContain(checkValue) && checkValue.includes(againstValue));
     case 'greater':
       return checkValue > againstValue;
     case 'greater/equals':
       return checkValue >= againstValue;
     case 'includes':
-      return checkValue.includes(againstValue);
+      return canContain(checkValue) && checkValue.includes(againstValue);
     case 'less':
       return checkValue < againstValue;
     case 'less/equals':
@@ -50,6 +52,13 @@ export function checkCondition(
     default:
       return false;
   }
+}
+
+// "includes" and "excludes" only make sense against a string or an array.
+// Anything else (a number, undefined, a plain object) is treated as "cannot
+// contain" instead of throwing.
+function canContain(value: any): value is string | any[] {
+  return isString(value) || isArray(value);
 }
 
 function checkForDependencyLoop({
@@ -131,7 +140,10 @@ function executeRule({
     }
   }
 
-  if (rules[key].default !== undefined) {
+  // Precedence for a rule's key is: a fulfilled rule, then a value the
+  // caller already supplied in state, then the rule's default. The default
+  // only fills a gap, it never overrides an incoming value.
+  if (state[key] === undefined && rules[key].default !== undefined) {
     state[key] = rules[key].default!;
   }
 
@@ -192,6 +204,12 @@ function logOutResult(debug: boolean) {
 }
 
 export function rules(rules: Rules) {
+  if (!isPlainObject(rules)) {
+    throw new TypeError(
+      'rules() expects a plain object mapping state paths to rule definitions.',
+    );
+  }
+
   const rulesParsed = rulesParse(rules);
 
   return {
@@ -217,12 +235,17 @@ function rulesRun(rules: RulesParsed) {
 }
 
 function sanitiseKeys(input: RulesOutput): RulesOutput {
-  for (const key in input.result) {
-    if (!key.startsWith('{$.')) continue;
+  const sanitised: Record<string, unknown> = {};
 
-    input.result[key.substring(3, key.length - 1)] = input.result[key];
-    delete input.result[key];
+  for (const key in input.result) {
+    if (key.startsWith('{$.')) {
+      sanitised[key.substring(3, key.length - 1)] = input.result[key];
+    } else {
+      sanitised[key] = input.result[key];
+    }
   }
+
+  input.result = sanitised;
 
   return input;
 }
