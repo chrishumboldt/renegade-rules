@@ -39,7 +39,6 @@ export interface RuleConditionResult {
 
 export interface RuleItem {
   default?: RuleValue
-  hasRun?: boolean
   rules: Record<string, RuleResult>
 }
 
@@ -62,11 +61,6 @@ export type RuleOperator =
 export interface RuleParsed {
   conditions?: RuleCondition[]
   result: RuleValue
-}
-
-export interface RuleRunPipe {
-  rulesParsed: RulesParsed
-  stateFlat: Record<string, any>
 }
 
 export type Rules = Record<string, RuleItem>

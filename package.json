@@ -1,9 +1,16 @@
 {
   "name": "@renegaderocks/rules",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A simple rule engine using a human readable structure.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "license": "MIT",
   "files": [
     "dist",
