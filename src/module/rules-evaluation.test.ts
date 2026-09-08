@@ -316,10 +316,17 @@ test('An empty rule set passes the state straight through.', () => {
 
 test('Debug mode does not change the result.', () => {
   const engine = rules({ '{$.x}': { default: 1, rules: {} } })
+  // Debug mode writes to the console through both console.log and
+  // console.dir. Stub both so nothing leaks to stdout and corrupts the
+  // test runner's own output stream.
   const originalLog = console.log
-  let logged = 0
+  const originalDir = console.dir
+  let calls = 0
   console.log = () => {
-    logged += 1
+    calls += 1
+  }
+  console.dir = () => {
+    calls += 1
   }
 
   let quiet
@@ -329,8 +336,9 @@ test('Debug mode does not change the result.', () => {
     loud = engine.run({}, true).result
   } finally {
     console.log = originalLog
+    console.dir = originalDir
   }
 
   assert.deepStrictEqual(quiet, loud)
-  assert.ok(logged > 0)
+  assert.ok(calls > 0)
 })
