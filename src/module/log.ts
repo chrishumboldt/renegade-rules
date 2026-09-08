@@ -29,4 +29,3 @@ export function logOut(prefix = 'LOG', stringify = true) {
     return value
   }
 }
-

@@ -1,7 +1,7 @@
-import { isArray, isPlainObject, isString } from './is';
-import { logOut } from './log';
-import { objectCreateFromPath, objectFlatten } from './object';
-import { pipe } from './pipe';
+import { isArray, isPlainObject, isString } from './is'
+import { logOut } from './log'
+import { objectCreateFromPath, objectFlatten } from './object'
+import { pipe } from './pipe'
 import {
   CheckForDependencyLoopInput,
   CheckForDependencyLoopOutput,
@@ -18,39 +18,39 @@ import {
   RulesState,
   RulesStateParsed,
   StateParser,
-} from '../type/rule';
-import { rulesParse } from './rules-parse';
+} from '../type/rule'
+import { rulesParse } from './rules-parse'
 
 export function checkCondition(
   { against, check, operator }: RuleCondition,
   state: RulesStateParsed,
 ): boolean {
-  const againstValue = getConditionValue(against, state);
-  const checkValue = getConditionValue(check, state);
+  const againstValue = getConditionValue(against, state)
+  const checkValue = getConditionValue(check, state)
 
   switch (operator) {
     case 'endsWith':
-      return isString(checkValue) && checkValue.endsWith(againstValue);
+      return isString(checkValue) && checkValue.endsWith(againstValue)
     case 'equals':
-      return checkValue === againstValue;
+      return checkValue === againstValue
     case 'excludes':
       // The strict negation of "includes": a value that cannot contain
       // anything excludes everything.
-      return !(canContain(checkValue) && checkValue.includes(againstValue));
+      return !(canContain(checkValue) && checkValue.includes(againstValue))
     case 'greater':
-      return checkValue > againstValue;
+      return checkValue > againstValue
     case 'greater/equals':
-      return checkValue >= againstValue;
+      return checkValue >= againstValue
     case 'includes':
-      return canContain(checkValue) && checkValue.includes(againstValue);
+      return canContain(checkValue) && checkValue.includes(againstValue)
     case 'less':
-      return checkValue < againstValue;
+      return checkValue < againstValue
     case 'less/equals':
-      return checkValue <= againstValue;
+      return checkValue <= againstValue
     case 'startsWith':
-      return isString(checkValue) && checkValue.startsWith(againstValue);
+      return isString(checkValue) && checkValue.startsWith(againstValue)
     default:
-      return false;
+      return false
   }
 }
 
@@ -58,7 +58,7 @@ export function checkCondition(
 // Anything else (a number, undefined, a plain object) is treated as "cannot
 // contain" instead of throwing.
 function canContain(value: any): value is string | any[] {
-  return isString(value) || isArray(value);
+  return isString(value) || isArray(value)
 }
 
 function checkForDependencyLoop({
@@ -75,31 +75,31 @@ function checkForDependencyLoop({
             history,
           ).join('->')}->${ruleString}.`,
         ],
-      };
+      }
     }
   }
 
   return {
     hasError: false,
-  };
+  }
 }
 
 function executeAllRules({ rules, state }: RulesAndStateParsed): RulesOutput {
-  const errors: string[] = [];
-  const hasRun: RuleHasRun = {};
+  const errors: string[] = []
+  const hasRun: RuleHasRun = {}
 
   for (const key in rules) {
-    if (hasRun[key] === true) continue;
+    if (hasRun[key] === true) continue
 
-    executeRule({ errors, hasRun, key, rules, state });
-    if (errors.length > 0) break;
+    executeRule({ errors, hasRun, key, rules, state })
+    if (errors.length > 0) break
   }
 
   if (errors.length > 0) {
-    return { errors, result: state, rulesRun: Object.keys(hasRun) };
+    return { errors, result: state, rulesRun: Object.keys(hasRun) }
   }
 
-  return { result: state, rulesRun: Object.keys(hasRun) };
+  return { result: state, rulesRun: Object.keys(hasRun) }
 }
 
 function executeRule({
@@ -110,23 +110,23 @@ function executeRule({
   rules,
   state,
 }: ExecuteRuleInput) {
-  if (!key.startsWith('{$.') || hasRun[key] === true) return;
+  if (!key.startsWith('{$.') || hasRun[key] === true) return
 
-  const { dependencies } = rules[key];
+  const { dependencies } = rules[key]
 
   if (dependencies && dependencies.length > 0) {
     const check = checkForDependencyLoop({
       dependencies,
       history: dependencyHistory,
       ruleString: key,
-    });
+    })
 
     if (check.hasError) {
-      check.errors?.forEach(item => errors.push(item));
-      return;
+      check.errors?.forEach(item => errors.push(item))
+      return
     }
 
-    dependencyHistory[key] = true;
+    dependencyHistory[key] = true
 
     for (let index = 0; index < dependencies.length; index++) {
       executeRule({
@@ -136,7 +136,7 @@ function executeRule({
         key: dependencies[index],
         rules,
         state,
-      });
+      })
     }
   }
 
@@ -144,43 +144,43 @@ function executeRule({
   // caller already supplied in state, then the rule's default. The default
   // only fills a gap, it never overrides an incoming value.
   if (state[key] === undefined && rules[key].default !== undefined) {
-    state[key] = rules[key].default!;
+    state[key] = rules[key].default!
   }
 
   for (const ruleKey in rules[key].rules) {
     const { fulfilled, result } = getRuleResult(
       rules[key].rules[ruleKey],
       state,
-    );
+    )
 
     if (fulfilled === true) {
-      state[key] = result;
-      break;
+      state[key] = result
+      break
     }
   }
 
-  hasRun[key] = true;
+  hasRun[key] = true
 }
 
 function getConditionFulfillment(
   conditions: RuleCondition[] = [],
   state: RulesStateParsed,
 ): boolean {
-  if (conditions.length < 1) return false;
+  if (conditions.length < 1) return false
 
   for (let index = 0; index < conditions.length; index++) {
-    if (checkCondition(conditions[index], state) === false) return false;
+    if (checkCondition(conditions[index], state) === false) return false
   }
 
-  return true;
+  return true
 }
 
 function getConditionValue(input: any, state: RulesStateParsed): RuleValue {
   if (isString(input) && input.startsWith('{$.')) {
-    return state[input];
+    return state[input]
   }
 
-  return input;
+  return input
 }
 
 function getRuleResult(
@@ -190,38 +190,38 @@ function getRuleResult(
   return {
     fulfilled: getConditionFulfillment(ruleItem.conditions, state),
     result: ruleItem.result,
-  };
+  }
 }
 
 function logOutResult(debug: boolean) {
   return function (input: RulesOutput): RulesOutput {
     if (debug === true) {
-      logOut('Rules Debug: Result', false)(input);
+      logOut('Rules Debug: Result', false)(input)
     }
 
-    return input;
-  };
+    return input
+  }
 }
 
 export function rules(rules: Rules) {
   if (!isPlainObject(rules)) {
     throw new TypeError(
       'rules() expects a plain object mapping state paths to rule definitions.',
-    );
+    )
   }
 
-  const rulesParsed = rulesParse(rules);
+  const rulesParsed = rulesParse(rules)
 
   return {
     parse: rulesParsed,
     run: rulesRun(rulesParsed),
-  };
+  }
 }
 
 function rulesRun(rules: RulesParsed) {
   return function (state: RulesState, debug = false): RulesOutput {
     if (debug === true) {
-      logOut('Rules Debug: Parsed Rules', false)(rules);
+      logOut('Rules Debug: Parsed Rules', false)(rules)
     }
 
     return pipe(
@@ -230,34 +230,34 @@ function rulesRun(rules: RulesParsed) {
       sanitiseKeys,
       transformFlatResults,
       logOutResult(debug),
-    )({ rules, state });
-  };
+    )({ rules, state })
+  }
 }
 
 function sanitiseKeys(input: RulesOutput): RulesOutput {
-  const sanitised: Record<string, unknown> = {};
+  const sanitised: Record<string, unknown> = {}
 
   for (const key in input.result) {
     if (key.startsWith('{$.')) {
-      sanitised[key.substring(3, key.length - 1)] = input.result[key];
+      sanitised[key.substring(3, key.length - 1)] = input.result[key]
     } else {
-      sanitised[key] = input.result[key];
+      sanitised[key] = input.result[key]
     }
   }
 
-  input.result = sanitised;
+  input.result = sanitised
 
-  return input;
+  return input
 }
 
 function stateParser(input: StateParser): RulesAndStateParsed {
-  input.state = objectFlatten(input.state);
+  input.state = objectFlatten(input.state)
 
-  return input;
+  return input
 }
 
 function transformFlatResults(input: RulesOutput): RulesOutput {
-  input.result = objectCreateFromPath(input.result);
+  input.result = objectCreateFromPath(input.result)
 
-  return input;
+  return input
 }

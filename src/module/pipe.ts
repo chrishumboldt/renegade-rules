@@ -544,4 +544,3 @@ export function pipe(...funcs: ((input: unknown) => unknown)[]) {
     return funcs.reduce((chain, func) => func(chain), input)
   }
 }
-

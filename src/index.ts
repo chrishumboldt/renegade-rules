@@ -1,2 +1,2 @@
-export * from './module/rules';
-export * from './type';
+export * from './module/rules'
+export * from './type'

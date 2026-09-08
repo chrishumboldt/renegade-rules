@@ -1,35 +1,35 @@
-import { isArray, isPlainObject, isUnsafeKey } from './is';
+import { isArray, isPlainObject, isUnsafeKey } from './is'
 
 export function objectClone<T>(source: T): T {
   if (isArray(source)) {
-    return objectCloneArray(source as any[]) as T;
+    return objectCloneArray(source as any[]) as T
   } else if (isPlainObject(source)) {
-    return objectCloneObject(source as Record<string, any>) as T;
+    return objectCloneObject(source as Record<string, any>) as T
   } else {
-    return source;
+    return source
   }
 }
 
 function objectCloneArray(source: any[]): any[] {
-  const returnItem: any[] = [];
+  const returnItem: any[] = []
 
   for (let item of source) {
-    returnItem.push(objectClone(item));
+    returnItem.push(objectClone(item))
   }
 
-  return returnItem;
+  return returnItem
 }
 
 function objectCloneObject(source: Record<string, any>): Record<string, any> {
-  const newObject: Record<string, any> = {};
+  const newObject: Record<string, any> = {}
 
   for (let key in source) {
-    if (source[key] === undefined || isUnsafeKey(key)) continue;
+    if (source[key] === undefined || isUnsafeKey(key)) continue
 
-    newObject[key] = objectClone(source[key]);
+    newObject[key] = objectClone(source[key])
   }
 
-  return newObject;
+  return newObject
 }
 
 // This function will take in a map of "flat" paths that point to a
@@ -69,7 +69,6 @@ export function objectCreateFromPath(
   return newObject
 }
 
-
 export function objectFlatten<T = unknown>(
   input: Record<string, any>,
   parentKey?: string,
@@ -84,10 +83,7 @@ export function objectFlatten<T = unknown>(
     // Only walk plain objects. Arrays and built ins stay whole as leaf
     // values so they survive a flatten/rebuild round trip.
     if (isPlainObject(input[key])) {
-      const innerResult = objectFlatten(
-        input[key],
-        innerParentKey,
-      )
+      const innerResult = objectFlatten(input[key], innerParentKey)
 
       result = objectMerge(result, innerResult)
     } else {
