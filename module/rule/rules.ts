@@ -80,8 +80,7 @@ function executeAllRules({ rules, state }: RulesAndStateParsed): RulesOutput {
   const hasRun: RuleHasRun = {};
 
   for (const key in rules) {
-    // We can simply skip over rules that have already run.
-    if (rules[key].hasRun === true) continue;
+    if (hasRun[key] === true) continue;
 
     executeRule({ errors, hasRun, key, rules, state });
     if (errors.length > 0) break;
@@ -104,10 +103,11 @@ function executeRule({
 }: ExecuteRuleInput) {
   if (!key.startsWith('{$.') || hasRun[key] === true) return;
 
-  // Check the dependencies first.
-  if (rules[key].dependencies && rules[key].dependencies.length > 0) {
+  const { dependencies } = rules[key];
+
+  if (dependencies && dependencies.length > 0) {
     const check = checkForDependencyLoop({
-      dependencies: rules[key].dependencies,
+      dependencies,
       history: dependencyHistory,
       ruleString: key,
     });
@@ -119,12 +119,12 @@ function executeRule({
 
     dependencyHistory[key] = true;
 
-    for (let index = 0; index < rules[key].dependencies.length; index++) {
+    for (let index = 0; index < dependencies.length; index++) {
       executeRule({
-        dependencyHistory,
+        dependencyHistory: { ...dependencyHistory },
         errors,
         hasRun,
-        key: rules[key].dependencies[index],
+        key: dependencies[index],
         rules,
         state,
       });

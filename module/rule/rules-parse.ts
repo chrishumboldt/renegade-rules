@@ -1,4 +1,4 @@
-import { isNumber, isString } from '@module/is';
+import { isString } from '@module/is';
 import { objectClone } from '@module/object';
 import type {
   RuleItem,
@@ -35,8 +35,8 @@ function parseAgainst(input: string): RuleValue {
     return false;
   }
 
-  const number = parseFloat(input);
-  if (isNumber(number)) {
+  const number = Number(input);
+  if (input.trim() !== '' && !Number.isNaN(number)) {
     return number;
   }
 
@@ -85,7 +85,7 @@ export function rulesParseRuleItemRule(
 
   condition
     .substring(3)
-    .split('and')
+    .split(' and ')
     .forEach(condition => {
       const [check, operator, ...against] = condition.trim().split(' ');
       const againstResult = parseAgainst(against.join(' '));

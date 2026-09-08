@@ -7,7 +7,7 @@ export function isFunction(input: any): boolean {
 };
 
 export function isNumber(input: any): boolean {
-  return !isString(input) && !Number.isNaN(parseFloat(input))
+  return typeof input === 'number' && !Number.isNaN(input);
 }
 
 export function isObject(input: any): boolean {

@@ -43,8 +43,8 @@ export interface RuleItem {
   rules: Record<string, RuleResult>;
 }
 
-export interface RuleItemParsed extends Omit<RuleItem, 'rule'> {
-  dependencies: string[];
+export interface RuleItemParsed extends Omit<RuleItem, 'rules'> {
+  dependencies?: string[];
   rules: Record<string, RuleParsed>;
 }
 

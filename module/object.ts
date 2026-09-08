@@ -24,7 +24,7 @@ function objectCloneObject(source: Record<string, any>): Record<string, any> {
   const newObject: Record<string, any> = {};
 
   for (let key in source) {
-    if (source[key] == null) continue;
+    if (source[key] === undefined) continue;
 
     if (isObject(source[key])) {
       newObject[key] = objectClone(source[key]);
@@ -97,7 +97,7 @@ export function objectMerge<T = Record<string, any>>(
   target: Record<string, any>,
 ): T {
   for (let key in target) {
-    if (target[key] == null) continue
+    if (target[key] === undefined) continue
 
     source[key] = objectReplaceValue(source[key], target[key])
   }
